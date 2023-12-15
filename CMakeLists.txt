@@ -3,4 +3,4 @@ project(TVID C)
 
 set(CMAKE_C_STANDARD 17)
 
-add_executable(TVID main.c)
+add_executable(TVID src/main.c src/format.c src/colors.c)
