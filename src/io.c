@@ -41,7 +41,7 @@ void processFolder(int argc, char **argv){
         }
         
         if (displayOutput) {
-            display(inputFolder, outputFolder, num_entries, namelist);
+            display(inputFolder, num_entries, namelist);
         }
         else
         {
