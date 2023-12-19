@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 
-void parseArguments(int argc, char *argv[], char *inputFilename, char *outputFilename, int *displayOutput) 
+void parseArguments(int argc, char *argv[], char *inputFilename, char *outputFilename, int *displayOutput, int *frame_rate) 
 {
     int opt;
 
@@ -17,6 +17,13 @@ void parseArguments(int argc, char *argv[], char *inputFilename, char *outputFil
                 exit(EXIT_SUCCESS);
             case 'd':
                 *displayOutput = 1;
+                if (optind < argc) {
+                    *frame_rate = atoi(argv[optind]);
+                    optind++;
+                } else {
+                    fprintf(stderr, "Option -d requires an integer argument for frame rate.\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case 'o':
                 strcpy(outputFilename, optarg);

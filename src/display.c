@@ -6,8 +6,6 @@
 #include "display.h"
 #include "format.h"
 
-#define FRAME_RATE 50
-
 long long current_timestamp_milliseconds() {
     struct timeval te;
     gettimeofday(&te, NULL);
@@ -15,7 +13,7 @@ long long current_timestamp_milliseconds() {
     return milliseconds;
 }
 
-void display(const char* inputFolder, int num_entries, struct dirent **namelist) {
+void display(const char* inputFolder, int num_entries, struct dirent **namelist, int frame_rate) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
         return;
@@ -48,8 +46,8 @@ void display(const char* inputFolder, int num_entries, struct dirent **namelist)
     long long timestamp_ms = current_timestamp_milliseconds();
     for (int i = 0; i < num_entries; ++i) {
         if (namelist[i]->d_type == DT_REG) {
-            if (current_timestamp_milliseconds() - timestamp_ms < 1000 / FRAME_RATE) {
-                SDL_Delay(1000 / FRAME_RATE - (current_timestamp_milliseconds() - timestamp_ms));
+            if (current_timestamp_milliseconds() - timestamp_ms < 1000 / frame_rate) {
+                SDL_Delay(1000 / frame_rate - (current_timestamp_milliseconds() - timestamp_ms));
             }
             timestamp_ms = current_timestamp_milliseconds();
             char *inputFilename = malloc(sizeof(char) * 1000);

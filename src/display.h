@@ -3,6 +3,6 @@
 
 #include <dirent.h>
 
-void display(const char* inputFolder, int num_entries, struct dirent **namelist);
+void display(const char* inputFolder, int num_entries, struct dirent **namelist, int frame_rate);
 
 #endif // DISPLAY_H

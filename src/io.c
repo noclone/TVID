@@ -18,12 +18,13 @@ void processFolder(int argc, char **argv){
     char* inputFolder;
     char* outputFolder;
     int displayOutput = 0;
+    int frame_rate = 0;
 
     inputFolder = malloc(sizeof(char) * 1000);
     outputFolder = malloc(sizeof(char) * 1000);
     sprintf(outputFolder, "images/");
 
-    parseArguments(argc, argv, inputFolder, outputFolder, &displayOutput);
+    parseArguments(argc, argv, inputFolder, outputFolder, &displayOutput, &frame_rate);
 
     if (access(outputFolder, F_OK) == -1) {
         mkdir(outputFolder, 0777);
@@ -41,7 +42,7 @@ void processFolder(int argc, char **argv){
         }
         
         if (displayOutput) {
-            display(inputFolder, num_entries, namelist);
+            display(inputFolder, num_entries, namelist, frame_rate);
         }
         else
         {
