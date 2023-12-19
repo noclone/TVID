@@ -11,10 +11,10 @@ void yuv2rgb(int width, int height, int maxColorValue, FILE *inputFile, FILE *ou
     for (int y = 0; y < newHeight; y++) {
         for (int x = 0; x < width; x++) {
             int Y = yuvPixels[y * width + x];
-            int U = yuvPixels[newHeight + (y / 2) * (width / 2) + (x / 2)];
-            int V = yuvPixels[newHeight + (y / 2) * (width / 2) + ((width / 2) + x / 2)];
+            int U = yuvPixels[(newHeight + (y / 2)) * width + (x / 2)];
+            int V = yuvPixels[(newHeight + (y / 2)) * width + (width / 2) + (x / 2)];
 
-            int C = Y;
+            int C = Y - 16;
             int D = U - 128;
             int E = V - 128;
 
@@ -26,9 +26,12 @@ void yuv2rgb(int width, int height, int maxColorValue, FILE *inputFile, FILE *ou
             G = (G < 0) ? 0 : ((G > 255) ? 255 : G);
             B = (B < 0) ? 0 : ((B > 255) ? 255 : B);
 
-            fputc(R, outputFile);  // Red
-            fputc(G, outputFile);  // Green
-            fputc(B, outputFile);  // Blue
+            fputc((unsigned char)R, outputFile);
+            fputc((unsigned char)G, outputFile);
+            fputc((unsigned char)B, outputFile);
+
+            if (x == 0)
+                printf("rgb: %d %d %d\n", R, G, B);
         }
     }
     

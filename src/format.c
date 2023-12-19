@@ -14,7 +14,7 @@ void pgmToPpm(const char *inputFilename, const char *outputFilename) {
     char magicNumber[3];
     int width, height, maxColorValue;
 
-    fscanf(inputFile, "%2s", magicNumber);
+    fscanf(inputFile, "%2c", magicNumber);
     fscanf(inputFile, "%d %d %d", &width, &height, &maxColorValue);
 
     if (magicNumber[0] != 'P' || magicNumber[1] != '5') {
