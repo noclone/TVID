@@ -13,6 +13,7 @@ set(SOURCE_FILES
     src/colors.c
     src/parser.c
     src/display.c
+    src/io.c
 )
 
 add_executable(TVID ${SOURCE_FILES})

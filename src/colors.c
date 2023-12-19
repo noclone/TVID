@@ -29,9 +29,6 @@ void yuv2rgb(int width, int height, int maxColorValue, FILE *inputFile, FILE *ou
             fputc((unsigned char)R, outputFile);
             fputc((unsigned char)G, outputFile);
             fputc((unsigned char)B, outputFile);
-
-            if (x == 0)
-                printf("rgb: %d %d %d\n", R, G, B);
         }
     }
     
