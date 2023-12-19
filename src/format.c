@@ -12,17 +12,17 @@ void pgmToPpm(const char *inputFilename, const char *outputFilename) {
     }
 
     char magicNumber[3];
-    int width, height, maxGrayValue;
+    int width, height, maxColorValue;
 
     fscanf(inputFile, "%2s", magicNumber);
-    fscanf(inputFile, "%d %d %d", &width, &height, &maxGrayValue);
+    fscanf(inputFile, "%d %d %d", &width, &height, &maxColorValue);
 
     if (magicNumber[0] != 'P' || magicNumber[1] != '5') {
         fprintf(stderr, "Format d'image non pris en charge. Seul PGM est pris en charge.\n");
         exit(EXIT_FAILURE);
     }
 
-    yuv2rgb(width, height, maxGrayValue, inputFile, outputFile);
+    yuv2rgb(width, height, maxColorValue, inputFile, outputFile);
 
     fclose(inputFile);
     fclose(outputFile);
