@@ -17,14 +17,30 @@ int sort(const struct dirent **a, const struct dirent **b) {
 void processFolder(int argc, char **argv){
     char* inputFolder;
     char* outputFolder;
+    char* headerFileName;
     int displayOutput = 0;
     int frame_rate = 0;
 
     inputFolder = malloc(sizeof(char) * 1000);
     outputFolder = malloc(sizeof(char) * 1000);
+    headerFileName = malloc(sizeof(char) * 1000);
     sprintf(outputFolder, "images/");
 
-    parseArguments(argc, argv, inputFolder, outputFolder, &displayOutput, &frame_rate);
+    parseArguments(argc, argv, inputFolder, outputFolder, &displayOutput, &frame_rate, headerFileName);
+
+    if (frame_rate == 0){
+        FILE* headerFile = fopen(headerFileName, "r");
+        if (headerFile == NULL){
+            frame_rate = 25;
+        }
+        else {
+            fscanf(headerFile, "%d", &frame_rate);
+            printf("Frame rate: %d\n", frame_rate);
+            frame_rate = 27000000 / frame_rate;
+            fclose(headerFile);
+        }
+    }
+    printf("Frame rate: %d\n", frame_rate);
 
     if (access(outputFolder, F_OK) == -1) {
         mkdir(outputFolder, 0777);

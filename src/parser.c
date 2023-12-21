@@ -6,11 +6,11 @@
 #include <unistd.h>
 #include <string.h>
 
-void parseArguments(int argc, char *argv[], char *inputFilename, char *outputFilename, int *displayOutput, int *frame_rate) 
+void parseArguments(int argc, char *argv[], char *inputFilename, char *outputFilename, int *displayOutput, int *frame_rate, char *headerFileName) 
 {
     int opt;
 
-    while ((opt = getopt(argc, argv, "hdo:")) != -1) {
+    while ((opt = getopt(argc, argv, "hdom:")) != -1) {
         switch (opt) {
             case 'h':
                 printf("Help:\nUsage: %s INPUT_FILE [-hdo]\n-h: Display this help message.\n-d: Display the output image without saving it.\n-o: Specify the output file.\n", argv[0]);
@@ -20,13 +20,13 @@ void parseArguments(int argc, char *argv[], char *inputFilename, char *outputFil
                 if (optind < argc) {
                     *frame_rate = atoi(argv[optind]);
                     optind++;
-                } else {
-                    fprintf(stderr, "Option -d requires an integer argument for frame rate.\n");
-                    exit(EXIT_FAILURE);
                 }
                 break;
             case 'o':
                 strcpy(outputFilename, optarg);
+                break;
+            case 'm':
+                strcpy(headerFileName, optarg);
                 break;
             default:
                 fprintf(stderr, "Usage: %s INPUT_FILE [-hdo]\n", argv[0]);
