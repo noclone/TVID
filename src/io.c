@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "display.h"
 #include "format.h"
+#include <errno.h>
 
 int compare_integers(const void *a, const void *b) {
     return (*(int *)a - *(int *)b);
@@ -20,13 +21,14 @@ void processFolder(int argc, char **argv){
     char* headerFileName;
     int displayOutput = 0;
     int frame_rate = 0;
+    int frame_period = 0;
 
     inputFolder = malloc(sizeof(char) * 1000);
     outputFolder = malloc(sizeof(char) * 1000);
     headerFileName = malloc(sizeof(char) * 1000);
     sprintf(outputFolder, "images/");
 
-    parseArguments(argc, argv, inputFolder, outputFolder, &displayOutput, &frame_rate, headerFileName);
+    parseArguments(argc, argv, inputFolder, outputFolder, &displayOutput, &frame_period, headerFileName);
 
     if (frame_rate == 0){
         FILE* headerFile = fopen(headerFileName, "r");
@@ -34,9 +36,8 @@ void processFolder(int argc, char **argv){
             frame_rate = 25;
         }
         else {
-            fscanf(headerFile, "%d", &frame_rate);
-            printf("Frame rate: %d\n", frame_rate);
-            frame_rate = 27000000 / frame_rate;
+            fscanf(headerFile, "%d", &frame_period);
+            frame_rate = 27000000 / frame_period;
             fclose(headerFile);
         }
     }
