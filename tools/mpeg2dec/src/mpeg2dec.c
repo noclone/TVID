@@ -276,7 +276,7 @@ static void decode_mpeg2 (uint8_t * current, uint8_t * end)
 
     info = mpeg2_info (mpeg2dec);
 
-	FILE *headerFile = NULL;//fopen("meta.info", "w");
+	FILE *headerFile = fopen("meta.info", "w");
     while (1) {
 	state = mpeg2_parse (mpeg2dec);
 	if (verbose)
@@ -355,7 +355,7 @@ static void decode_mpeg2 (uint8_t * current, uint8_t * end)
 	    break;
 	}
     }
-	//fclose(headerFile);
+	fclose(headerFile);
 }
 
 #define DEMUX_PAYLOAD_START 1
