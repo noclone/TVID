@@ -30,7 +30,7 @@
 #include "mpeg2.h"
 
 void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
-		 int offset, int verbose);
+		 int offset, int verbose, FILE *headerFile);
 
 static struct {
     const mpeg2_sequence_t * ptr;
@@ -210,7 +210,7 @@ static void pic_code_del (const mpeg2_picture_t * pic)
 }
 
 void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
-		 int offset, int verbose)
+		 int offset, int verbose, FILE *headerFile)
 {
     static const char * state_name[] = {
 	"BUFFER", "SEQUENCE", "SEQUENCE_REPEATED","GOP",
@@ -246,6 +246,7 @@ void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
 	picture_match (info->display_picture_2nd, &last_disppic2))
 	return;
     fprintf (f, "%8x", offset);
+
     if (verbose > 1) {
 	switch (state) {
 	case STATE_PICTURE:
@@ -346,11 +347,14 @@ void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
 			 prim, trans, matrix);
 	    }
 	}
-	fprintf (f, " %dx%d chroma %dx%d fps %.*f maxBps %d vbv %d "
+	//fprintf(headerFile, "frame_period: %.f\n", seq->frame_period);
+
+	fprintf (f, " %dx%d chroma %dx%d fps %.*f frame_period %.f maxBps %d vbv %d "
 		 "picture %dx%d display %dx%d pixel %dx%d",
 		 seq->width, seq->height,
 		 seq->chroma_width, seq->chroma_height,
 		 27000000%seq->frame_period?2:0, 27000000.0/seq->frame_period,
+		 seq->frame_period,
 		 seq->byte_rate, seq->vbv_buffer_size,
 		 seq->picture_width, seq->picture_height,
 		 seq->display_width, seq->display_height,
@@ -377,6 +381,7 @@ void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
 		 coding_type[pic->flags & PIC_MASK_CODING_TYPE]);
 	if (pic->flags & PIC_FLAG_PROGRESSIVE_FRAME)
 	    fprintf (f, " PROG");
+	//fprintf(headerFile, "PROG: %d\n", pic->flags & PIC_FLAG_PROGRESSIVE_FRAME);
 	if (pic->flags & PIC_FLAG_SKIP)
 	    fprintf (f, " SKIP");
 	fprintf (f, " fields %d", pic->nb_fields);
@@ -401,6 +406,7 @@ void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
     default:
 	fprintf (f, "\n");
     }
+
     if (verbose > 2 && info->user_data_len) {
 	fprintf (f, "         USER_DATA %d bytes\n", info->user_data_len);
 	if (verbose > 3)

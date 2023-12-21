@@ -55,7 +55,7 @@ static int total_offset = 0;
 static int verbose = 0;
 
 void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
-		 int offset, int verbose);
+		 int offset, int verbose, FILE *headerFile);
 
 #ifdef HAVE_GETTIMEOFDAY
 
@@ -275,11 +275,14 @@ static void decode_mpeg2 (uint8_t * current, uint8_t * end)
     total_offset += end - current;
 
     info = mpeg2_info (mpeg2dec);
+
+	FILE *headerFile = fopen("meta.info", "w");
+	fprintf(headerFile, "test");
     while (1) {
 	state = mpeg2_parse (mpeg2dec);
 	if (verbose)
 	    dump_state (stderr, state, info,
-			total_offset - mpeg2_getpos (mpeg2dec), verbose);
+			total_offset - mpeg2_getpos (mpeg2dec), verbose, headerFile);
 	switch (state) {
 	case STATE_BUFFER:
 	    return;
@@ -353,6 +356,7 @@ static void decode_mpeg2 (uint8_t * current, uint8_t * end)
 	    break;
 	}
     }
+	fclose(headerFile);
 }
 
 #define DEMUX_PAYLOAD_START 1
