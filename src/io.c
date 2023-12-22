@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "display.h"
 #include "format.h"
+#include "header.h"
 #include <errno.h>
 
 int compare_integers(const void *a, const void *b) {
@@ -31,17 +32,8 @@ void processFolder(int argc, char **argv){
     parseArguments(argc, argv, inputFolder, outputFolder, &displayOutput, &frame_period, headerFileName);
 
     if (frame_rate == 0){
-        FILE* headerFile = fopen(headerFileName, "r");
-        if (headerFile == NULL){
-            frame_rate = 25;
-        }
-        else {
-            fscanf(headerFile, "%d", &frame_period);
-            frame_rate = 27000000 / frame_period;
-            fclose(headerFile);
-        }
+        frame_rate = 25;
     }
-    printf("Frame rate: %d\n", frame_rate);
 
     if (access(outputFolder, F_OK) == -1) {
         mkdir(outputFolder, 0777);
@@ -51,7 +43,11 @@ void processFolder(int argc, char **argv){
 
     if (dir) {
         struct dirent **namelist;
-        int num_entries = scandir(inputFolder, &namelist, 0, sort);
+
+        int num_entries = scandir(inputFolder, &namelist, 0, sort) - 1; // -1 for header directory
+
+        header* header = malloc(sizeof(header));
+        parseHeaderFile(headerFileName, header);
 
         if (num_entries < 0) {
             perror("scandir");
@@ -59,7 +55,7 @@ void processFolder(int argc, char **argv){
         }
         
         if (displayOutput) {
-            display(inputFolder, num_entries, namelist, frame_rate);
+            display(inputFolder, num_entries, namelist, frame_rate, header);
         }
         else
         {
@@ -80,8 +76,19 @@ void processFolder(int argc, char **argv){
 
         free(namelist);
         closedir(dir);
+
+        free(header->progs);
+        free(header->tffs);
+        free(header->rffs);
+        free(header->period_changes_indices);
+        free(header->period_changes_values);
+        free(header);
     } else {
         fprintf(stderr, "Le dossier %s n'existe pas.\n", inputFolder);
         exit(EXIT_FAILURE);
     }
+
+    free(inputFolder);
+    free(outputFolder);
+    free(headerFileName);
 }

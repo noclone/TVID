@@ -276,7 +276,11 @@ static void decode_mpeg2 (uint8_t * current, uint8_t * end)
 
     info = mpeg2_info (mpeg2dec);
 
-	FILE *headerFile = fopen("meta.info", "w");
+	FILE *headerFile = fopen("meta.info", "a");
+	if (headerFile == NULL) {
+		fprintf(stderr, "Can't open file\n%s\n", strerror(errno));
+		exit(1);
+	}
     while (1) {
 	state = mpeg2_parse (mpeg2dec);
 	if (verbose)

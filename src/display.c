@@ -13,7 +13,8 @@ long long current_timestamp_milliseconds() {
     return milliseconds;
 }
 
-void display(const char* inputFolder, int num_entries, struct dirent **namelist, int frame_rate) {
+void display(const char* inputFolder, int num_entries, struct dirent **namelist, int frame_rate, header *header) {
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
         return;
@@ -44,7 +45,11 @@ void display(const char* inputFolder, int num_entries, struct dirent **namelist,
 
     const char* outputFileName = "tmp.ppm";
     long long timestamp_ms = current_timestamp_milliseconds();
+    int period_changes_idx = 0;
     for (int i = 0; i < num_entries; ++i) {
+        if (i == header->period_changes_indices[period_changes_idx]){
+            frame_rate = 27000000/header->period_changes_values[period_changes_idx++];
+        }
         if (namelist[i]->d_type == DT_REG) {
             if (current_timestamp_milliseconds() - timestamp_ms < 1000 / frame_rate) {
                 SDL_Delay(1000 / frame_rate - (current_timestamp_milliseconds() - timestamp_ms));

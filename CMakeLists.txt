@@ -15,6 +15,7 @@ set(SOURCE_FILES
     src/parser.c
     src/display.c
     src/io.c
+    src/header.c
 )
 
 add_executable(TVID ${SOURCE_FILES})

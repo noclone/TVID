@@ -347,7 +347,7 @@ void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
 			 prim, trans, matrix);
 	    }
 	}
-	fprintf(headerFile, "frame_period: %d\n", seq->frame_period);
+	fprintf(headerFile, "frame_period:%d\n", seq->frame_period);
 
 	fprintf (f, " %dx%d chroma %dx%d fps %.*f frame_period %.f maxBps %d vbv %d "
 		 "picture %dx%d display %dx%d pixel %dx%d",
@@ -381,9 +381,9 @@ void dump_state (FILE * f, mpeg2_state_t state, const mpeg2_info_t * info,
 		 coding_type[pic->flags & PIC_MASK_CODING_TYPE]);
 	if (pic->flags & PIC_FLAG_PROGRESSIVE_FRAME)
 	    fprintf (f, " PROG");
-	fprintf(headerFile, "PROG: %d\n", pic->flags & PIC_FLAG_PROGRESSIVE_FRAME ? 1 : 0);
-    fprintf(headerFile, "TFF: %d\n", pic->flags & PIC_FLAG_TOP_FIELD_FIRST ? 1 : 0);
-    fprintf(headerFile, "RFF: %d\n", pic->flags & PIC_FLAG_REPEAT_FIRST_FIELD ? 1 : 0);
+	fprintf(headerFile, "PROG:%d\n", pic->flags & PIC_FLAG_PROGRESSIVE_FRAME ? 1 : 0);
+    fprintf(headerFile, "TFF:%d\n", pic->flags & PIC_FLAG_TOP_FIELD_FIRST ? 1 : 0);
+    fprintf(headerFile, "RFF:%d\n", pic->flags & PIC_FLAG_REPEAT_FIRST_FIELD ? 1 : 0);
 	if (pic->flags & PIC_FLAG_SKIP)
 	    fprintf (f, " SKIP");
 	fprintf (f, " fields %d", pic->nb_fields);
