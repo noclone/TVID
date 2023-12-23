@@ -5,12 +5,31 @@
 #include <sys/time.h>
 #include "display.h"
 #include "format.h"
+#include "bob.h"
 
 long long current_timestamp_milliseconds() {
     struct timeval te;
     gettimeofday(&te, NULL);
     long long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;
     return milliseconds;
+}
+
+void displayImage(char *inputFilename, SDL_Renderer *renderer, const char* outputFileName){
+    SDL_Surface *imageSurface = IMG_Load(outputFileName);
+    if (imageSurface == NULL) {
+        fprintf(stderr, "IMG_Load Error: %s\n", IMG_GetError());
+        free(inputFilename);
+        return;
+    }
+
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, imageSurface);
+    SDL_FreeSurface(imageSurface);
+
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    SDL_RenderPresent(renderer);
+
+    SDL_DestroyTexture(texture);
 }
 
 void display(const char* inputFolder, int num_entries, struct dirent **namelist, int frame_rate, Header *header) {
@@ -44,11 +63,15 @@ void display(const char* inputFolder, int num_entries, struct dirent **namelist,
     }
 
     const char* outputFileName = "tmp.ppm";
+    const char* outputFileNameA = "tmpA.ppm";
+    const char* outputFileNameB = "tmpB.ppm";
     long long timestamp_ms = current_timestamp_milliseconds();
     int period_changes_idx = 0;
+    int frame_number = 0;
+    frame_rate *= 2;
     for (int i = 0; i < num_entries; ++i) {
         if (i == header->period_changes_indices[period_changes_idx]){
-            frame_rate = 27000000/header->period_changes_values[period_changes_idx++];
+            frame_rate = 27000000/header->period_changes_values[period_changes_idx++] * 2;
         }
         if (namelist[i]->d_type == DT_REG) {
             if (current_timestamp_milliseconds() - timestamp_ms < 1000 / frame_rate) {
@@ -60,22 +83,15 @@ void display(const char* inputFolder, int num_entries, struct dirent **namelist,
             
             pgmToPpm(inputFilename, outputFileName);
 
-            SDL_Surface *imageSurface = IMG_Load(outputFileName);
-            if (imageSurface == NULL) {
-                fprintf(stderr, "IMG_Load Error: %s\n", IMG_GetError());
-                free(inputFilename);
-                continue;
+            if (header->progs[frame_number] == 1) {
+                displayImage(inputFilename, renderer, outputFileName);
             }
+            else{
+                deinterlaceBob(outputFileName, header, frame_number, outputFileNameA, outputFileNameB);
 
-            SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, imageSurface);
-            SDL_FreeSurface(imageSurface);
-
-            SDL_RenderClear(renderer);
-            SDL_RenderCopy(renderer, texture, NULL, NULL);
-            SDL_RenderPresent(renderer);
-
-            SDL_DestroyTexture(texture);
-            free(inputFilename);
+                displayImage(inputFilename, renderer, outputFileNameA);
+                displayImage(inputFilename, renderer, outputFileNameB);
+            }
 
             SDL_Event event;
             while (SDL_PollEvent(&event)) {
@@ -86,6 +102,10 @@ void display(const char* inputFolder, int num_entries, struct dirent **namelist,
                     return;
                 }
             }
+
+            free(inputFilename);
+
+            frame_number++;
         }
         free(namelist[i]);
     }

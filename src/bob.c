@@ -6,27 +6,27 @@
 #include <sys/stat.h>
 #include <string.h>
 
-void deinterlaceBob(const char *inputFilename, Header *header, int frame_number, char* outputFolder, char* fileName) {
+void copyFile(const char *inputFilename, const char *outputFilename) {
+    FILE *inputFile = fopen(inputFilename, "rb");
+    FILE *outputFile = fopen(outputFilename, "wb");
 
-    char *subFolder = "bob";
-    char *subFolderName = malloc(sizeof(char) * 1000);
-    sprintf(subFolderName, "%s/%s", outputFolder, subFolder);
-    if (access(subFolderName, F_OK) == -1) {
-        mkdir(subFolderName, 0777);
+    if (inputFile == NULL || outputFile == NULL) {
+        perror("Erreur lors de l'ouverture des fichiers");
+        exit(EXIT_FAILURE);
     }
 
+    char c;
+    while ((c = fgetc(inputFile)) != EOF) {
+        fputc(c, outputFile);
+    }
+
+    fclose(inputFile);
+    fclose(outputFile);
+}
+
+void deinterlaceBob(const char *inputFilename, Header *header, int frame_number, const char *outputFilenameA, const char *outputFilenameB) {
+
     FILE *inputFile = fopen(inputFilename, "rb");
-
-    const char *dotPosition = strchr(fileName, '.');
-    size_t length = dotPosition - fileName;
-    char frameID[length + 1];
-    strncpy(frameID, fileName, length);
-    frameID[length] = '\0';
-
-    char *outputFilenameA = malloc(sizeof(char) * 1000);
-    sprintf(outputFilenameA, "%s/%s/%s_A.ppm", outputFolder, subFolder, frameID);
-    char *outputFilenameB = malloc(sizeof(char) * 1000);
-    sprintf(outputFilenameB, "%s/%s/%s_B.ppm", outputFolder, subFolder, frameID);
 
     FILE *outputFileA = fopen(outputFilenameA, "wb");
     FILE *outputFileB = fopen(outputFilenameB, "wb");
@@ -53,7 +53,7 @@ void deinterlaceBob(const char *inputFilename, Header *header, int frame_number,
     FILE *outputFile;
     char *line = malloc(sizeof(char) * width * 3);
     for (int i = 0; i < height; ++i) {
-        if (i % 2 == 0) {
+        if (i % 2 == !header->tffs[frame_number]) {
             outputFile = outputFileA;
         } else {
             outputFile = outputFileB;

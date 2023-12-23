@@ -59,9 +59,16 @@ void processFolder(int argc, char **argv){
         }
         else
         {
+            int frame_number = 0;
+            char *subFolder = "bob";
+            char *subFolderName = malloc(sizeof(char) * 1000);
+            sprintf(subFolderName, "%s/%s", outputFolder, subFolder);
+            if (access(subFolderName, F_OK) == -1) {
+                mkdir(subFolderName, 0777);
+            }
+
             for (int i = 0; i < num_entries; ++i) {
                 if (namelist[i]->d_type == DT_REG) {
-                    printf("%s\n", namelist[i]->d_name);
                     char *inputFilename = malloc(sizeof(char) * 1000);
                     char *outputFilename = malloc(sizeof(char) * 1000);
                     sprintf(inputFilename, "%s/%s", inputFolder, namelist[i]->d_name);
@@ -69,13 +76,31 @@ void processFolder(int argc, char **argv){
                     outputFilename[strlen(outputFilename) - 2] = 'p';
                     pgmToPpm(inputFilename, outputFilename);
 
-                    deinterlaceBob(outputFilename, header, i, outputFolder, namelist[i]->d_name);
+                    if (header->progs[frame_number] == 1) {
+                        char *fileNameSub = malloc(sizeof(char) * 1000);
+                        sprintf(fileNameSub, "%s/%s/%d.ppm", outputFolder, subFolder, frame_number);
+                        copyFile(outputFilename, fileNameSub);
+                        free(fileNameSub);
+                    }
+                    else {
+                        char *outputFilenameA = malloc(sizeof(char) * 1000);
+                        sprintf(outputFilenameA, "%s/%s/%d_A.ppm", outputFolder, subFolder, frame_number);
+                        char *outputFilenameB = malloc(sizeof(char) * 1000);
+                        sprintf(outputFilenameB, "%s/%s/%d_B.ppm", outputFolder, subFolder, frame_number);
+
+                        deinterlaceBob(outputFilename, header, frame_number, outputFilenameA, outputFilenameB);
+
+                        free(outputFilenameA);
+                        free(outputFilenameB);
+                    }
 
                     free(inputFilename);
                     free(outputFilename);
+                    frame_number++;
                 }
                 free(namelist[i]);
             }
+            free(subFolderName);
         }
 
         free(namelist);
