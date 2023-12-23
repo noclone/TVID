@@ -46,10 +46,8 @@ void processFolder(int argc, char **argv){
 
         int num_entries = scandir(inputFolder, &namelist, 0, sort);
 
-        header* header = malloc(sizeof(header));
+        Header* header = malloc(sizeof(Header));
         parseHeaderFile(headerFileName, header);
-        printf("num_entries: %d\n", num_entries);
-        printf("header size: %d\n", header->size);
 
         if (num_entries < 0) {
             perror("scandir");
@@ -71,7 +69,7 @@ void processFolder(int argc, char **argv){
                     outputFilename[strlen(outputFilename) - 2] = 'p';
                     pgmToPpm(inputFilename, outputFilename);
 
-                    //deinterlaceBob(outputFilename, header, i, outputFolder);
+                    deinterlaceBob(outputFilename, header, i, outputFolder, namelist[i]->d_name);
 
                     free(inputFilename);
                     free(outputFilename);

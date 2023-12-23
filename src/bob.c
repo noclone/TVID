@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <string.h>
 
-void deinterlaceBob(const char *inputFilename, header *header, int frame_number, char* outputFolder) {
+void deinterlaceBob(const char *inputFilename, Header *header, int frame_number, char* outputFolder, char* fileName) {
 
     char *subFolder = "bob";
     char *subFolderName = malloc(sizeof(char) * 1000);
@@ -14,14 +15,18 @@ void deinterlaceBob(const char *inputFilename, header *header, int frame_number,
         mkdir(subFolderName, 0777);
     }
 
-
     FILE *inputFile = fopen(inputFilename, "rb");
 
+    const char *dotPosition = strchr(fileName, '.');
+    size_t length = dotPosition - fileName;
+    char frameID[length + 1];
+    strncpy(frameID, fileName, length);
+    frameID[length] = '\0';
 
     char *outputFilenameA = malloc(sizeof(char) * 1000);
-    sprintf(outputFilenameA, "%s/%s/%d_A.ppm", outputFolder, subFolder, frame_number);
+    sprintf(outputFilenameA, "%s/%s/%s_A.ppm", outputFolder, subFolder, frameID);
     char *outputFilenameB = malloc(sizeof(char) * 1000);
-    sprintf(outputFilenameB, "%s/%s/%d_B.ppm", outputFolder, subFolder, frame_number);
+    sprintf(outputFilenameB, "%s/%s/%s_B.ppm", outputFolder, subFolder, frameID);
 
     FILE *outputFileA = fopen(outputFilenameA, "wb");
     FILE *outputFileB = fopen(outputFilenameB, "wb");

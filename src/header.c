@@ -6,14 +6,14 @@
 
 int getHeaderSize(FILE *headerFile){
     int count;
-    char line[100];
+    char line[10000];
     while (fgets(line, sizeof(line), headerFile) != NULL) {
         count++;
     }
     return count;
 }
 
-void parseHeaderFile(char* headerFileName, header* header){
+void parseHeaderFile(char* headerFileName, Header* header){
 
     FILE* headerFile = fopen(headerFileName, "r");
     if (headerFile == NULL){
@@ -29,8 +29,6 @@ void parseHeaderFile(char* headerFileName, header* header){
     header->period_changes_values = calloc(sizeof(int), size);
 
     rewind(headerFile);
-
-    
 
     char line[50];
 

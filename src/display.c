@@ -13,7 +13,7 @@ long long current_timestamp_milliseconds() {
     return milliseconds;
 }
 
-void display(const char* inputFolder, int num_entries, struct dirent **namelist, int frame_rate, header *header) {
+void display(const char* inputFolder, int num_entries, struct dirent **namelist, int frame_rate, Header *header) {
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());

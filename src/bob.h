@@ -3,6 +3,6 @@
 
 #include "header.h"
 
-void deinterlaceBob(const char *inputFilename, header *header, int frame_number, char* outputFolder);
+void deinterlaceBob(const char *inputFilename, Header *header, int frame_number, char* outputFolder, char *fileName);
 
 #endif // BOB_H
