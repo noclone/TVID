@@ -37,6 +37,11 @@ void parseHeaderFile(char* headerFileName, header* header){
     int i = 0;
     int frame_period_idx = 0;
 
+    // skip first 6 lines
+    for (int i = 0; i < 6; ++i) {
+        fgets(line, sizeof(line), headerFile);
+    }
+
     while (fgets(line, sizeof(line), headerFile) != NULL) {
         char *name = strtok(line, ":");
         char *valueStr = strtok(NULL, ":");
@@ -64,6 +69,7 @@ void parseHeaderFile(char* headerFileName, header* header){
             fprintf(stderr, "Error parsing line: %s\n", line);
         }
     }
+    header->size = i;
 
     fclose(headerFile);
     

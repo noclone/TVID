@@ -4,7 +4,7 @@
 #include "display.h"
 #include "format.h"
 #include "header.h"
-#include <errno.h>
+#include "bob.h"
 
 int compare_integers(const void *a, const void *b) {
     return (*(int *)a - *(int *)b);
@@ -44,10 +44,12 @@ void processFolder(int argc, char **argv){
     if (dir) {
         struct dirent **namelist;
 
-        int num_entries = scandir(inputFolder, &namelist, 0, sort) - 1; // -1 for header directory
+        int num_entries = scandir(inputFolder, &namelist, 0, sort);
 
         header* header = malloc(sizeof(header));
         parseHeaderFile(headerFileName, header);
+        printf("num_entries: %d\n", num_entries);
+        printf("header size: %d\n", header->size);
 
         if (num_entries < 0) {
             perror("scandir");
@@ -61,12 +63,16 @@ void processFolder(int argc, char **argv){
         {
             for (int i = 0; i < num_entries; ++i) {
                 if (namelist[i]->d_type == DT_REG) {
+                    printf("%s\n", namelist[i]->d_name);
                     char *inputFilename = malloc(sizeof(char) * 1000);
                     char *outputFilename = malloc(sizeof(char) * 1000);
                     sprintf(inputFilename, "%s/%s", inputFolder, namelist[i]->d_name);
                     sprintf(outputFilename, "%s%s", outputFolder, namelist[i]->d_name);
                     outputFilename[strlen(outputFilename) - 2] = 'p';
                     pgmToPpm(inputFilename, outputFilename);
+
+                    //deinterlaceBob(outputFilename, header, i, outputFolder);
+
                     free(inputFilename);
                     free(outputFilename);
                 }

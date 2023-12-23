@@ -3,3 +3,5 @@ videos/
 tools/
 énoncé/
 .vscode/
+.idea/
+cmake-build-debug/
