@@ -90,6 +90,10 @@ void display(const char* inputFolder, int num_entries, struct dirent **namelist,
                 deinterlaceBob(inputFilename, header, frame_number, outputFileNameA, outputFileNameB);
 
                 displayImage(inputFilename, renderer, outputFileNameA);
+                if (current_timestamp_milliseconds() - timestamp_ms < 1000 / frame_rate) {
+                    SDL_Delay(1000 / frame_rate - (current_timestamp_milliseconds() - timestamp_ms));
+                }
+                timestamp_ms = current_timestamp_milliseconds();
                 displayImage(inputFilename, renderer, outputFileNameB);
             }
 
