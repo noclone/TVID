@@ -70,16 +70,12 @@ void processFolder(int argc, char **argv){
             for (int i = 0; i < num_entries; ++i) {
                 if (namelist[i]->d_type == DT_REG) {
                     char *inputFilename = malloc(sizeof(char) * 1000);
-                    char *outputFilename = malloc(sizeof(char) * 1000);
                     sprintf(inputFilename, "%s/%s", inputFolder, namelist[i]->d_name);
-                    sprintf(outputFilename, "%s%s", outputFolder, namelist[i]->d_name);
-                    outputFilename[strlen(outputFilename) - 2] = 'p';
-                    pgmToPpm(inputFilename, outputFilename);
 
                     if (header->progs[frame_number] == 1) {
                         char *fileNameSub = malloc(sizeof(char) * 1000);
                         sprintf(fileNameSub, "%s/%s/%d.ppm", outputFolder, subFolder, frame_number);
-                        copyFile(outputFilename, fileNameSub);
+                        pgmToPpm(inputFilename, fileNameSub);
                         free(fileNameSub);
                     }
                     else {
@@ -88,14 +84,13 @@ void processFolder(int argc, char **argv){
                         char *outputFilenameB = malloc(sizeof(char) * 1000);
                         sprintf(outputFilenameB, "%s/%s/%d_B.ppm", outputFolder, subFolder, frame_number);
 
-                        deinterlaceBob(outputFilename, header, frame_number, outputFilenameA, outputFilenameB);
+                        deinterlaceBob(inputFilename, header, frame_number, outputFilenameA, outputFilenameB);
 
                         free(outputFilenameA);
                         free(outputFilenameB);
                     }
 
                     free(inputFilename);
-                    free(outputFilename);
                     frame_number++;
                 }
                 free(namelist[i]);

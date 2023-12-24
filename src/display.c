@@ -80,14 +80,14 @@ void display(const char* inputFolder, int num_entries, struct dirent **namelist,
             timestamp_ms = current_timestamp_milliseconds();
             char *inputFilename = malloc(sizeof(char) * 1000);
             sprintf(inputFilename, "%s/%s", inputFolder, namelist[i]->d_name);
-            
-            pgmToPpm(inputFilename, outputFileName);
+
 
             if (header->progs[frame_number] == 1) {
+                pgmToPpm(inputFilename, outputFileName);
                 displayImage(inputFilename, renderer, outputFileName);
             }
             else{
-                deinterlaceBob(outputFileName, header, frame_number, outputFileNameA, outputFileNameB);
+                deinterlaceBob(inputFilename, header, frame_number, outputFileNameA, outputFileNameB);
 
                 displayImage(inputFilename, renderer, outputFileNameA);
                 displayImage(inputFilename, renderer, outputFileNameB);
@@ -109,6 +109,10 @@ void display(const char* inputFolder, int num_entries, struct dirent **namelist,
         }
         free(namelist[i]);
     }
+
+    remove(outputFileName);
+    remove(outputFileNameA);
+    remove(outputFileNameB);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
