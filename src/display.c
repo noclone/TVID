@@ -87,7 +87,8 @@ void display(const char* inputFolder, int num_entries, struct dirent **namelist,
                 displayImage(inputFilename, renderer, outputFileName);
             }
             else{
-                deinterlaceBob(inputFilename, header, frame_number, outputFileNameA, outputFileNameB);
+                //deinterlaceBob(inputFilename, header, frame_number, outputFileNameA, outputFileNameB);
+                deinterlaceAdaptive(inputFilename, header, frame_number, outputFileNameA, outputFileNameB, 50);
 
                 displayImage(inputFilename, renderer, outputFileNameA);
                 if (current_timestamp_milliseconds() - timestamp_ms < 1000 / frame_rate) {

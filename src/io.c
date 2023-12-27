@@ -56,7 +56,6 @@ void processFolder(int argc, char **argv){
         }
         
         if (displayOutput) {
-            printf("frame_rate: %d\n", frame_rate);
             display(inputFolder, num_entries, namelist, frame_rate, header, forceFrameRate);
         }
         else

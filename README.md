@@ -1,5 +1,10 @@
 # TVID
 
+## Authors
+
+Jean FECHTER \
+Thibault BOUTET
+
 ## Build
 
 ```bash

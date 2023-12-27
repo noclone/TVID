@@ -6,6 +6,27 @@
 #include <sys/stat.h>
 #include <string.h>
 
+Color getRGBfromYUV(unsigned char *pixels, int x, int y, int width, int height){
+    int Y = pixels[y * width + x];
+    int U = pixels[(height + (y / 2)) * width + (x / 2)];
+    int V = pixels[(height + (y / 2)) * width + (width / 2) + (x / 2)];
+
+    int C = Y - 16;
+    int D = U - 128;
+    int E = V - 128;
+
+    int R = (int)(C + 1.402 * E);
+    int G = (int)(C - 0.344 * D - 0.714 * E);
+    int B = (int)(C + 1.772 * D);
+
+    R = (R < 0) ? 0 : ((R > 255) ? 255 : R);
+    G = (G < 0) ? 0 : ((G > 255) ? 255 : G);
+    B = (B < 0) ? 0 : ((B > 255) ? 255 : B);
+
+    Color color = {R, G, B};
+    return color;
+}
+
 void deinterlaceBob(const char *inputFilename, Header *header, int frame_number, const char *outputFilenameA, const char *outputFilenameB) {
 
     FILE *inputFile = fopen(inputFilename, "rb");
@@ -48,25 +69,12 @@ void deinterlaceBob(const char *inputFilename, Header *header, int frame_number,
             outputFile = outputFileB;
         }
         for (int x = 0; x < width; x++) {
-            int Y = yuvPixels[y * width + x];
-            int U = yuvPixels[(newHeight + (y / 2)) * width + (x / 2)];
-            int V = yuvPixels[(newHeight + (y / 2)) * width + (width / 2) + (x / 2)];
 
-            int C = Y - 16;
-            int D = U - 128;
-            int E = V - 128;
+            Color color = getRGBfromYUV(yuvPixels, x, y, width, newHeight);
 
-            int R = (int)(C + 1.402 * E);
-            int G = (int)(C - 0.344 * D - 0.714 * E);
-            int B = (int)(C + 1.772 * D);
-
-            R = (R < 0) ? 0 : ((R > 255) ? 255 : R);
-            G = (G < 0) ? 0 : ((G > 255) ? 255 : G);
-            B = (B < 0) ? 0 : ((B > 255) ? 255 : B);
-
-            line[idx++] = (unsigned char)R;
-            line[idx++] = (unsigned char)G;
-            line[idx++] = (unsigned char)B;
+            line[idx++] = color.R;
+            line[idx++] = color.G;
+            line[idx++] = color.B;
         }
         fwrite(line, sizeof(unsigned char), width * 3, outputFile);
         fwrite(line, sizeof(unsigned char), width * 3, outputFile);
@@ -76,4 +84,128 @@ void deinterlaceBob(const char *inputFilename, Header *header, int frame_number,
     fclose(outputFileA);
     fclose(outputFileB);
     free(line);
+    free(yuvPixels);
+}
+
+int motionDetection(unsigned char *currentLine, unsigned char *previousLine, int width, int motionThreshold) {
+    int sumSquaredDifference = 0;
+
+    for (int i = 0; i < width; i++) {
+        int difference = currentLine[i] - previousLine[i];
+        sumSquaredDifference += difference * difference;
+    }
+
+    int averageSquaredDifference = sumSquaredDifference / width;
+    return averageSquaredDifference > (motionThreshold * motionThreshold);
+}
+
+void deinterlaceAdaptive(const char *inputFilename, Header *header, int frame_number, const char *outputFilenameA, const char *outputFilenameB, int motionThreshold) {
+
+    FILE *inputFile = fopen(inputFilename, "rb");
+
+    FILE *outputFileA = fopen(outputFilenameA, "wb");
+    FILE *outputFileB = fopen(outputFilenameB, "wb");
+
+    if (inputFile == NULL || outputFileA == NULL || outputFileB == NULL) {
+        perror("Erreur lors de l'ouverture des fichiers");
+        exit(EXIT_FAILURE);
+    }
+
+    char magicNumber[3];
+    int width, height, maxColorValue;
+
+    fscanf(inputFile, "%2c", magicNumber);
+    fscanf(inputFile, "%d %d %d", &width, &height, &maxColorValue);
+
+    if (magicNumber[0] != 'P' || magicNumber[1] != '5') {
+        fprintf(stderr, "Format d'image non pris en charge. Seul PGM est pris en charge.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    unsigned char *yuvPixels = (unsigned char *)malloc((width * height) * sizeof(unsigned char));
+    fread(yuvPixels, sizeof(unsigned char), (width * height), inputFile);
+
+    FILE *previousFrame;
+    unsigned char *yuvPixelsPrevious = (unsigned char *)malloc((width * height) * sizeof(unsigned char));
+    if (frame_number != 0){
+        char *previousFrameName = malloc(sizeof(char) * 1000);
+        char *lastSlash = strrchr(inputFilename, '/');
+        strncpy(previousFrameName, inputFilename, lastSlash - inputFilename);
+        sprintf(previousFrameName + (lastSlash - inputFilename), "/%d.pgm", frame_number - 1);
+        previousFrame = fopen(previousFrameName, "rb");
+        fread(yuvPixelsPrevious, sizeof(unsigned char), (width * height), previousFrame);
+    }
+
+    int newHeight = height * 2 / 3;
+
+    fprintf(outputFileA, "P6\n%d %d\n%d\n", width, newHeight, maxColorValue);
+    fprintf(outputFileB, "P6\n%d %d\n%d\n", width, newHeight, maxColorValue);
+
+    FILE *outputFile;
+    unsigned char *line = malloc(sizeof(unsigned char) * width * 3);
+    unsigned char *previousLine = malloc(sizeof(unsigned char) * width * 3);
+
+    int segmentSize = 10;
+
+    int idx;
+    for (int y = 0; y < newHeight; y++) {
+        idx = 0;
+        if (y % 2 == !header->tffs[frame_number]) {
+            outputFile = outputFileA;
+        } else {
+            outputFile = outputFileB;
+        }
+        for (int x = 0; x < width; x++) {
+
+            Color color = getRGBfromYUV(yuvPixels, x, y, width, newHeight);
+
+            line[idx++] = color.R;
+            line[idx++] = color.G;
+            line[idx++] = color.B;
+
+            if (frame_number != 0){
+                Color previousColor = getRGBfromYUV(yuvPixelsPrevious, x, y, width, newHeight);
+                previousLine[idx++] = previousColor.R;
+                previousLine[idx++] = previousColor.G;
+                previousLine[idx++] = previousColor.B;
+            }
+
+            if (frame_number != 0 && idx == segmentSize * 3){
+                if (motionDetection(line, previousLine, idx, motionThreshold)) {
+                    fwrite(line, sizeof(unsigned char), idx, outputFile);
+                    fwrite(line, sizeof(unsigned char), idx, outputFile);
+                } else {
+                    fwrite(line, sizeof(unsigned char), idx, outputFile);
+                    fwrite(previousLine, sizeof(unsigned char), idx, outputFile);
+                }
+                idx = 0;
+            }
+        }
+
+        if (frame_number == 0){
+            fwrite(line, sizeof(unsigned char), width * 3, outputFile);
+            fwrite(line, sizeof(unsigned char), width * 3, outputFile);
+        }
+        else if (idx != 0){
+            if (motionDetection(line, previousLine, idx / 3, motionThreshold)) {
+                fwrite(line, sizeof(unsigned char), idx, outputFile);
+                fwrite(line, sizeof(unsigned char), idx, outputFile);
+            } else {
+                fwrite(line, sizeof(unsigned char), idx, outputFile);
+                fwrite(previousLine, sizeof(unsigned char), idx, outputFile);
+            }
+        }
+    }
+
+    fclose(inputFile);
+    fclose(outputFileA);
+    fclose(outputFileB);
+    free(line);
+    free(previousLine);
+    free(yuvPixels);
+    free(yuvPixelsPrevious);
+    if (frame_number != 0){
+        fclose(previousFrame);
+    }
+
 }
