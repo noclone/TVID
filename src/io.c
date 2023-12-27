@@ -22,16 +22,17 @@ void processFolder(int argc, char **argv){
     char* headerFileName;
     int displayOutput = 0;
     int frame_rate = 0;
-    int frame_period = 0;
 
     inputFolder = malloc(sizeof(char) * 1000);
     outputFolder = malloc(sizeof(char) * 1000);
     headerFileName = malloc(sizeof(char) * 1000);
     sprintf(outputFolder, "images/");
 
-    parseArguments(argc, argv, inputFolder, outputFolder, &displayOutput, &frame_period, headerFileName);
+    parseArguments(argc, argv, inputFolder, outputFolder, &displayOutput, &frame_rate, headerFileName);
 
+    int forceFrameRate = 1;
     if (frame_rate == 0){
+        forceFrameRate = 0;
         frame_rate = 25;
     }
 
@@ -55,7 +56,8 @@ void processFolder(int argc, char **argv){
         }
         
         if (displayOutput) {
-            display(inputFolder, num_entries, namelist, frame_rate, header);
+            printf("frame_rate: %d\n", frame_rate);
+            display(inputFolder, num_entries, namelist, frame_rate, header, forceFrameRate);
         }
         else
         {

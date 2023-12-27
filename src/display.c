@@ -32,7 +32,7 @@ void displayImage(char *inputFilename, SDL_Renderer *renderer, const char* outpu
     SDL_DestroyTexture(texture);
 }
 
-void display(const char* inputFolder, int num_entries, struct dirent **namelist, int frame_rate, Header *header) {
+void display(const char* inputFolder, int num_entries, struct dirent **namelist, int frame_rate, Header *header, int forceFrameRate) {
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
@@ -70,7 +70,7 @@ void display(const char* inputFolder, int num_entries, struct dirent **namelist,
     int frame_number = 0;
     frame_rate *= 2;
     for (int i = 0; i < num_entries; ++i) {
-        if (i == header->period_changes_indices[period_changes_idx]){
+        if (i == header->period_changes_indices[period_changes_idx] && !forceFrameRate){
             frame_rate = 27000000/header->period_changes_values[period_changes_idx++] * 2;
         }
         if (namelist[i]->d_type == DT_REG) {

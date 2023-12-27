@@ -17,6 +17,7 @@ void parseHeaderFile(char* headerFileName, Header* header){
 
     FILE* headerFile = fopen(headerFileName, "r");
     if (headerFile == NULL){
+        fprintf(stderr, "Error opening file: %s\n", headerFileName);
         exit(EXIT_FAILURE);
     }
 
