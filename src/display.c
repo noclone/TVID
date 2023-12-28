@@ -32,7 +32,7 @@ void displayImage(char *inputFilename, SDL_Renderer *renderer, const char* outpu
     SDL_DestroyTexture(texture);
 }
 
-void display(const char* inputFolder, int num_entries, struct dirent **namelist, int frame_rate, Header *header, int forceFrameRate) {
+void display(const char* inputFolder, int num_entries, struct dirent **namelist, int frame_rate, Header *header, int forceFrameRate, int motionThreshold) {
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
@@ -87,9 +87,10 @@ void display(const char* inputFolder, int num_entries, struct dirent **namelist,
                 displayImage(inputFilename, renderer, outputFileName);
             }
             else{
-                //deinterlaceBob(inputFilename, header, frame_number, outputFileNameA, outputFileNameB);
-                deinterlaceAdaptive(inputFilename, header, frame_number, outputFileNameA, outputFileNameB, 50);
-
+                if (motionThreshold == 0)
+                    deinterlaceBob(inputFilename, header, frame_number, outputFileNameA, outputFileNameB);
+                else
+                    deinterlaceAdaptive(inputFilename, header, frame_number, outputFileNameA, outputFileNameB, motionThreshold);
                 displayImage(inputFilename, renderer, outputFileNameA);
                 if (current_timestamp_milliseconds() - timestamp_ms < 1000 / frame_rate) {
                     SDL_Delay(1000 / frame_rate - (current_timestamp_milliseconds() - timestamp_ms));

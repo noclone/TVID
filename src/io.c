@@ -22,13 +22,14 @@ void processFolder(int argc, char **argv){
     char* headerFileName;
     int displayOutput = 0;
     int frame_rate = 0;
+    int motionThreshold = 0;
 
     inputFolder = malloc(sizeof(char) * 1000);
     outputFolder = malloc(sizeof(char) * 1000);
     headerFileName = malloc(sizeof(char) * 1000);
     sprintf(outputFolder, "images/");
 
-    parseArguments(argc, argv, inputFolder, outputFolder, &displayOutput, &frame_rate, headerFileName);
+    parseArguments(argc, argv, inputFolder, outputFolder, &displayOutput, &frame_rate, headerFileName, &motionThreshold);
 
     int forceFrameRate = 1;
     if (frame_rate == 0){
@@ -56,7 +57,7 @@ void processFolder(int argc, char **argv){
         }
         
         if (displayOutput) {
-            display(inputFolder, num_entries, namelist, frame_rate, header, forceFrameRate);
+            display(inputFolder, num_entries, namelist, frame_rate, header, forceFrameRate, motionThreshold);
         }
         else
         {
@@ -85,7 +86,10 @@ void processFolder(int argc, char **argv){
                         char *outputFilenameB = malloc(sizeof(char) * 1000);
                         sprintf(outputFilenameB, "%s/%s/%d_B.ppm", outputFolder, subFolder, frame_number);
 
-                        deinterlaceBob(inputFilename, header, frame_number, outputFilenameA, outputFilenameB);
+                        if (motionThreshold == 0)
+                            deinterlaceBob(inputFilename, header, frame_number, outputFilenameA, outputFilenameB);
+                        else
+                            deinterlaceAdaptive(inputFilename, header, frame_number, outputFilenameA, outputFilenameB, motionThreshold);
 
                         free(outputFilenameA);
                         free(outputFilenameB);

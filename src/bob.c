@@ -23,7 +23,7 @@ Color getRGBfromYUV(unsigned char *pixels, int x, int y, int width, int height){
     G = (G < 0) ? 0 : ((G > 255) ? 255 : G);
     B = (B < 0) ? 0 : ((B > 255) ? 255 : B);
 
-    Color color = {R, G, B};
+    Color color = {(unsigned char)R, (unsigned char)G, (unsigned char)B};
     return color;
 }
 
@@ -133,7 +133,16 @@ void deinterlaceAdaptive(const char *inputFilename, Header *header, int frame_nu
         strncpy(previousFrameName, inputFilename, lastSlash - inputFilename);
         sprintf(previousFrameName + (lastSlash - inputFilename), "/%d.pgm", frame_number - 1);
         previousFrame = fopen(previousFrameName, "rb");
+        char magicNumber2[3];
+        int width2, height2, maxColorValue2;
+        fscanf(previousFrame, "%2c", magicNumber2);
+        fscanf(previousFrame, "%d %d %d", &width2, &height2, &maxColorValue2);
+        if (magicNumber2[0] != 'P' || magicNumber2[1] != '5') {
+            fprintf(stderr, "Format d'image non pris en charge. Seul PGM est pris en charge.\n");
+            exit(EXIT_FAILURE);
+        }
         fread(yuvPixelsPrevious, sizeof(unsigned char), (width * height), previousFrame);
+        fclose(previousFrame);
     }
 
     int newHeight = height * 2 / 3;
@@ -144,12 +153,18 @@ void deinterlaceAdaptive(const char *inputFilename, Header *header, int frame_nu
     FILE *outputFile;
     unsigned char *line = malloc(sizeof(unsigned char) * width * 3);
     unsigned char *previousLine = malloc(sizeof(unsigned char) * width * 3);
+    unsigned char *tmpLine = malloc(sizeof(unsigned char) * width * 3);
+    unsigned char *oppositeFieldLine = malloc(sizeof(unsigned char) * width * 3);
 
     int segmentSize = 10;
 
     int idx;
+    int previousIdx;
+    int tmpLineIdx;
     for (int y = 0; y < newHeight; y++) {
         idx = 0;
+        previousIdx = 0;
+        tmpLineIdx = 0;
         if (y % 2 == !header->tffs[frame_number]) {
             outputFile = outputFileA;
         } else {
@@ -163,23 +178,29 @@ void deinterlaceAdaptive(const char *inputFilename, Header *header, int frame_nu
             line[idx++] = color.G;
             line[idx++] = color.B;
 
+            tmpLine[tmpLineIdx++] = color.R;
+            tmpLine[tmpLineIdx++] = color.G;
+            tmpLine[tmpLineIdx++] = color.B;
+
             if (frame_number != 0){
                 Color previousColor = getRGBfromYUV(yuvPixelsPrevious, x, y, width, newHeight);
-                previousLine[idx++] = previousColor.R;
-                previousLine[idx++] = previousColor.G;
-                previousLine[idx++] = previousColor.B;
+                previousLine[previousIdx++] = previousColor.R;
+                previousLine[previousIdx++] = previousColor.G;
+                previousLine[previousIdx++] = previousColor.B;
             }
 
-            if (frame_number != 0 && idx == segmentSize * 3){
+            if (frame_number != 0 && idx == segmentSize * 3 - 1){
                 if (motionDetection(line, previousLine, idx, motionThreshold)) {
                     fwrite(line, sizeof(unsigned char), idx, outputFile);
                     fwrite(line, sizeof(unsigned char), idx, outputFile);
                 } else {
                     fwrite(line, sizeof(unsigned char), idx, outputFile);
-                    fwrite(previousLine, sizeof(unsigned char), idx, outputFile);
+                    fwrite(oppositeFieldLine + tmpLineIdx - idx, sizeof(unsigned char), idx, outputFile);
                 }
                 idx = 0;
+                previousIdx = 0;
             }
+
         }
 
         if (frame_number == 0){
@@ -187,14 +208,17 @@ void deinterlaceAdaptive(const char *inputFilename, Header *header, int frame_nu
             fwrite(line, sizeof(unsigned char), width * 3, outputFile);
         }
         else if (idx != 0){
-            if (motionDetection(line, previousLine, idx / 3, motionThreshold)) {
+            if (motionDetection(line, previousLine, idx, motionThreshold)) {
                 fwrite(line, sizeof(unsigned char), idx, outputFile);
                 fwrite(line, sizeof(unsigned char), idx, outputFile);
             } else {
                 fwrite(line, sizeof(unsigned char), idx, outputFile);
-                fwrite(previousLine, sizeof(unsigned char), idx, outputFile);
+                fwrite(oppositeFieldLine + tmpLineIdx - idx, sizeof(unsigned char), idx, outputFile);
             }
         }
+
+        memcpy(oppositeFieldLine, tmpLine, width * 3);
+
     }
 
     fclose(inputFile);
@@ -204,8 +228,6 @@ void deinterlaceAdaptive(const char *inputFilename, Header *header, int frame_nu
     free(previousLine);
     free(yuvPixels);
     free(yuvPixelsPrevious);
-    if (frame_number != 0){
-        fclose(previousFrame);
-    }
-
+    free(tmpLine);
+    free(oppositeFieldLine);
 }

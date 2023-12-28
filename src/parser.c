@@ -5,12 +5,12 @@
 #include <getopt.h>
 #include <string.h>
 
-void parseArguments(int argc, char *argv[], char *inputFolder, char *outputFolder, int *displayOutput, int *frame_rate, char *headerFileName)
+void parseArguments(int argc, char *argv[], char *inputFolder, char *outputFolder, int *displayOutput, int *frame_rate, char *headerFileName, int *motionThreshold)
 {
     int opt;
     int headerFileSet = 0;
 
-    while ((opt = getopt(argc, argv, "hdo:m:")) != -1) {
+    while ((opt = getopt(argc, argv, "hdoa:m:")) != -1) {
         switch (opt) {
             case 'h':
                 printf("Help:\nUsage: %s INPUT_FOLDER -m HEADER_FILE [-do]\n-h: Display this help message.\n-d: Display the output images without saving them. (Optional) Specify the frame rate.\n-o: Specify the output folder.\n", argv[0]);
@@ -28,6 +28,9 @@ void parseArguments(int argc, char *argv[], char *inputFolder, char *outputFolde
             case 'm':
                 headerFileSet = 1;
                 strcpy(headerFileName, optarg);
+                break;
+            case 'a':
+                *motionThreshold = atoi(optarg);
                 break;
             default:
                 fprintf(stderr, "Usage: %s INPUT_FOLDER -m HEADER_FILE [-do]\n", argv[0]);
