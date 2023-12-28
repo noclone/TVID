@@ -156,11 +156,12 @@ void deinterlaceAdaptive(const char *inputFilename, Header *header, int frame_nu
     unsigned char *tmpLine = malloc(sizeof(unsigned char) * width * 3);
     unsigned char *oppositeFieldLine = malloc(sizeof(unsigned char) * width * 3);
 
-    int segmentSize = 10;
+    int segmentSize = 100;
 
     int idx;
     int previousIdx;
     int tmpLineIdx;
+    int prev = -1;
     for (int y = 0; y < newHeight; y++) {
         idx = 0;
         previousIdx = 0;
@@ -190,12 +191,15 @@ void deinterlaceAdaptive(const char *inputFilename, Header *header, int frame_nu
             }
 
             if (frame_number != 0 && idx == segmentSize * 3 - 1){
-                if (motionDetection(line, previousLine, idx, motionThreshold)) {
+                int motion = motionDetection(line, previousLine, idx, motionThreshold);
+                if (prev != 1 && (prev == 0 || motion)) {
+                    prev = prev == 0 ? -1 : 0;
                     fwrite(line, sizeof(unsigned char), idx, outputFile);
                     fwrite(line, sizeof(unsigned char), idx, outputFile);
-                } else {
-                    fwrite(line, sizeof(unsigned char), idx, outputFile);
-                    fwrite(oppositeFieldLine + tmpLineIdx - idx, sizeof(unsigned char), idx, outputFile);
+                } else if (prev != 0 && (prev == 1 || !motion)) {
+                    prev = prev == 1 ? -1 : 1;
+                    fwrite(line, sizeof(unsigned char), idx, outputFileA);
+                    fwrite(line, sizeof(unsigned char), idx, outputFileB);
                 }
                 idx = 0;
                 previousIdx = 0;
@@ -208,12 +212,15 @@ void deinterlaceAdaptive(const char *inputFilename, Header *header, int frame_nu
             fwrite(line, sizeof(unsigned char), width * 3, outputFile);
         }
         else if (idx != 0){
-            if (motionDetection(line, previousLine, idx, motionThreshold)) {
+            int motion = motionDetection(line, previousLine, idx, motionThreshold);
+            if (prev != 1 && (prev == 0 || motion)) {
+                prev = prev == 0 ? -1 : 0;
                 fwrite(line, sizeof(unsigned char), idx, outputFile);
                 fwrite(line, sizeof(unsigned char), idx, outputFile);
-            } else {
-                fwrite(line, sizeof(unsigned char), idx, outputFile);
-                fwrite(oppositeFieldLine + tmpLineIdx - idx, sizeof(unsigned char), idx, outputFile);
+            } else if (prev != 0 && (prev == 1 || !motion)) {
+                prev = prev == 1 ? -1 : 1;
+                fwrite(line, sizeof(unsigned char), idx, outputFileA);
+                fwrite(line, sizeof(unsigned char), idx, outputFileB);
             }
         }
 
